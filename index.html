@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Fakebook Messenger</title>
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header>
+        <h1 id="roomName">Global Chat</h1>
+    </header>
+
+    <div id="chat_content">
+        
+    </div>
+
+    <div class="chat-message">
+        <input type="text" placeholder="Type a message" id="user-message" onkeypress="return runScript(event)">
+        <button onclick="addUser()">Send</button>
+    </div>
+
+        
+<script src="https://www.gstatic.com/firebasejs/7.19.0/firebase.js"></script>
+<script>
+
+
+    var notValid = true;
+
+    while(notValid){
+        var username = prompt("Username");
+        if(username != null){
+            notValid = false;
+        }
+    }
+
+    if(username == ""){
+        username = "Guest";
+    }
+
+    var makeRoom = confirm("Do you want to create or join a room?");
+
+    var roomName = "";
+    
+    if(makeRoom){
+        roomName = prompt("Write any existing room name or create your own! Cancel if you want to go global!");
+        if(roomName == null || roomName == ""){
+            roomName = "global";
+            alert("Canceled: Using global room");
+        }
+    }
+    else{
+        roomName = "global";
+        alert("Using global room")
+    }
+
+    document.getElementById("roomName").innerText = roomName + " Chat";
+   
+    window.onload = function(){
+      var elem = document.getElementById('chat_content');
+      elem.scrollTop = elem.scrollHeight;  
+    }
+   
+
+
+   function runScript(e) {
+    //See notes about 'which' and 'key'
+    if (e.keyCode == 13) {
+        addUser();
+    }
+}
+
+  // Initialize Firebase
+  var config = {
+    apiKey: "AIzaSyDIVjqknetadp10J9YDiX14KiJXC-8PYIo",
+    authDomain: "robotic-sphere-285507.firebaseapp.com",
+    databaseURL: "https://robotic-sphere-285507.firebaseio.com",
+    projectId: "robotic-sphere-285507",
+    storageBucket: "robotic-sphere-285507.appspot.com",
+    messagingSenderId: "85029491737",
+    appId: "1:85029491737:web:aed9a3fc74974568dac688",
+    measurementId: "G-1W05C4VB1F"
+  };
+  firebase.initializeApp(config);
+
+  // setInterval(showUpdate, 50);  
+  
+  function showUpdate(){
+    var output = document.getElementById("chat_content");
+    
+    output.innerHTML = "";
+    
+    var playersRef = firebase.database().ref("messages/" + roomName);
+
+    playersRef.on("child_added", function(data, prevChildKey) {
+    var message = data.val();
+
+    output.innerHTML += `
+        <div class="container">
+                <div class="chat-box">
+                    <p class="username">${message.username}</p>
+                    <p class="content">${message.content}</p>
+                    <p class="time">${message.time}</p>
+                </div>
+        </div>
+    `;
+    });
+   
+  }
+
+  showUpdate();
+
+
+  function addUser(){
+    var dbRef = firebase.database().ref();
+    var usersRef = dbRef.child('messages/' + roomName);
+    var newUserRef = usersRef.push();
+
+    var content = document.getElementById('user-message').value;
+
+    var date = new Date();
+
+    var hours = date.getHours();
+    var minutes = date.getMinutes();
+    var ampm = hours >= 12 ? 'pm' : 'am';
+    hours = hours % 12;
+    hours = hours ? hours : 12; // the hour '0' should be '12'
+    minutes = minutes < 10 ? '0'+minutes : minutes;
+    var strTime = hours + ':' + minutes + ' ' + ampm;
+
+    newUserRef.set({
+        content: content,
+        username: username,
+        time: strTime
+    });
+
+    document.getElementById('user-message').value = "";
+
+    var elem = document.getElementById('chat_content');
+    elem.scrollTop = elem.scrollHeight;
+
+  }
+
+</script>
+
+
+
+</body>
+</html>
